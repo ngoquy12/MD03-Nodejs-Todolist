@@ -133,11 +133,11 @@
           // Lặp qua từng phần tử của mảng
           let htmls = datas.data.map(function (data) {
             return `
-            <div class="todo">
-            <p>${data.title}</p>
-            <button onclick="handleDelete(${data.id})">Delete</button>
-          </div>
-            `;
+      <div class="todo">
+        ${data.completed ? `<s>${data.title}</s>` : `<p>${data.title}</p>`}
+        <button onclick="handleDelete(${data.id})">Delete</button>
+      </div>
+      `;
           });
           // Chuyển từ mảng sang string
           let html = htmls.join("");

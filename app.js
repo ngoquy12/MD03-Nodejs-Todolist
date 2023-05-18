@@ -3,22 +3,26 @@ const app = express();
 const fs = require("fs");
 const bodyParser = require("body-parser");
 const port = 3000;
+// const queryString = require("query-string");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/api/v1/todos", (req, res) => {
+  const query = req.query.per_page || 4;
   const todos = fs.readFileSync("./dev-data/todos.json", "utf8");
 
   try {
     const listTodo = JSON.parse(todos);
 
+    const todo = listTodo.splice(0, query);
+
     if (listTodo) {
       return res.status(200).send({
         status: "success",
         result: listTodo.length,
-        data: listTodo,
+        data: todo,
       });
     }
   } catch (error) {
