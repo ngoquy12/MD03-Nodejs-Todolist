@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .container {
+        background-color: aqua;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      .todo-app {
+        border: 1px solid blue;
+        padding: 20px;
+        background-color: #fff;
+        max-width: 400px;
+        max-height: 600px;
+        position: relative;
+      }
+
+      .todo-header {
+        text-align: center;
+        padding: 20px;
+        font-weight: bold;
+        font-size: 20px;
+      }
+
+      .todo-input {
+        height: 36px;
+        max-width: 300px;
+        min-width: 300px;
+      }
+
+      input {
+        height: 80%;
+        outline: none;
+        border: 1px solid #dadada;
+        border-radius: 4px;
+        padding: 0 16px;
+      }
+
+      button,
+      .clear-btn {
+        height: 80%;
+        min-width: 50px;
+        background-color: rgb(17, 119, 227);
+        outline: none;
+        border: 1px solid transparent;
+        color: #fff;
+        border-radius: 4px;
+        font-weight: bold;
+        padding: 0 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .list-todo {
+        max-height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+        gap: 10px;
+      }
+
+      .todo {
+        height: 40px;
+        background-color: #dadada;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 5px;
+        line-height: 40px;
+        min-width: 100%;
+        gap: 10px;
+      }
+
+      .todo-footer-wrapper {
+        display: flex;
+        padding: 20px 0;
+        justify-content: space-between;
+        gap: 10px;
+        position: absolute;
+        bottom: 0;
+        width: 90%;
+        align-items: center;
+        height: 92px;
+        background-color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="todo-app">
+        <div class="todo-header">Todo App</div>
+        <div class="todo-input">
+          <input type="text" />
+          <button>+</button>
+        </div>
+        <div class="list-todo"></div>
+        <div class="todo-footer">
+          <div class="todo-footer-wrapper">
+            <p class="total">You have 4 pending tasks</p>
+            <button class="clear-btn">Clear All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Lấy tất cả todo
+      fetch("http://localhost:3000/api/v1/todos/")
+        .then((res) => res.json())
+        .then((datas) => {
+          console.log(datas);
+          const listTodo = document.querySelector(".list-todo");
+
+          // Hiển thị tổng số bản ghi
+          const totalTodo = document.querySelector(".total");
+          totalTodo.innerHTML = `You have ${datas.data.length} pending tasks`;
+
+          listTodo.innerHTML = ""; // Xóa nội dung trước đó
+          // Lặp qua từng phần tử của mảng
+          let htmls = datas.data.map(function (data) {
+            return `
+            <div class="todo">
+            <p>${data.title}</p>
+            <button onclick="handleDelete(${data.id})">Delete</button>
+          </div>
+            `;
+          });
+          // Chuyển từ mảng sang string
+          let html = htmls.join("");
+          // Gắn dữ liệu vào DOM
+          listTodo.innerHTML = html;
+        })
+        .catch((error) => {
+          console.error("Error fetching todos:", error);
+        });
+
+      // Xóa một todo
+      function handleDelete(id) {
+        fetch(`http://localhost:3000/api/v1/todos/${id}`, {
+          method: "DELETE",
+        })
+          .then((res) => res.json())
+          .then((datas) => {
+            if (datas.status == "success") {
+              window.location.reload();
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching todos:", error);
+          });
+      }
+    </script>
+  </body>
+</html>
