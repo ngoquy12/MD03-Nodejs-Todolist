@@ -90,6 +90,21 @@ app.delete("/api/v1/todos/:id", (req, res) => {
   }
 });
 
+app.delete("/api/v1/todos/", (req, res) => {
+  try {
+    const empty = [];
+
+    fs.writeFile("./dev-data/todos.json", JSON.stringify(empty), (err) => {
+      return res.status(200).json({
+        status: "success",
+        message: "Todo deleted successfully",
+      });
+    });
+  } catch (error) {
+    res.send({ error });
+  }
+});
+
 const checkExist = (req, res, next) => {
   const { title } = req.body;
 
@@ -105,14 +120,14 @@ const checkExist = (req, res, next) => {
 };
 
 app.post("/api/v1/todos", checkExist, (req, res) => {
-  const { userId, title } = req.body;
+  const { title } = req.body;
   try {
     const todos = JSON.parse(fs.readFileSync("./dev-data/todos.json", "utf8"));
 
     const id = Math.floor(Math.random() * 10000000000000000);
     const newTodo = {
       id: id,
-      userId,
+      userId: id,
       title: title,
       completed: false,
     };

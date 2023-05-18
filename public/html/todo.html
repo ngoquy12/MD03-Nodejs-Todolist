@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+
     <style>
       * {
         margin: 0;
@@ -24,9 +25,11 @@
         border: 1px solid blue;
         padding: 20px;
         background-color: #fff;
-        max-width: 400px;
+        max-width: 600px;
+        min-width: 600px;
         max-height: 600px;
         position: relative;
+        height: 500px;
       }
 
       .todo-header {
@@ -38,8 +41,9 @@
 
       .todo-input {
         height: 36px;
-        max-width: 300px;
-        min-width: 300px;
+        gap: 20px;
+        display: flex;
+        justify-content: space-between;
       }
 
       input {
@@ -48,13 +52,13 @@
         border: 1px solid #dadada;
         border-radius: 4px;
         padding: 0 16px;
+        flex: 1;
       }
 
-      button,
+      .btn,
       .clear-btn {
         height: 80%;
         min-width: 50px;
-        background-color: rgb(17, 119, 227);
         outline: none;
         border: 1px solid transparent;
         color: #fff;
@@ -63,6 +67,14 @@
         padding: 0 10px;
         font-size: 12px;
         cursor: pointer;
+      }
+
+      .btn-primary {
+        background-color: rgb(17, 119, 227);
+      }
+
+      .btn-danger {
+        background-color: rgb(227, 17, 21);
       }
 
       .list-todo {
@@ -95,8 +107,13 @@
         bottom: 0;
         width: 90%;
         align-items: center;
-        height: 92px;
+        height: 70px;
         background-color: #fff;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
       }
     </style>
   </head>
@@ -105,14 +122,16 @@
       <div class="todo-app">
         <div class="todo-header">Todo App</div>
         <div class="todo-input">
-          <input type="text" />
-          <button>+</button>
+          <input id="inputValue" type="text" />
+          <button class="btn btn-primary" onclick="handleAddTodo()">+</button>
         </div>
         <div class="list-todo"></div>
         <div class="todo-footer">
           <div class="todo-footer-wrapper">
             <p class="total">You have 4 pending tasks</p>
-            <button class="clear-btn">Clear All</button>
+            <button onclick="handleCleanAll()" class="btn btn-primary">
+              Clear All
+            </button>
           </div>
         </div>
       </div>
@@ -122,27 +141,38 @@
       fetch("http://localhost:3000/api/v1/todos/")
         .then((res) => res.json())
         .then((datas) => {
-          console.log(datas);
           const listTodo = document.querySelector(".list-todo");
-
-          // Hiển thị tổng số bản ghi
-          const totalTodo = document.querySelector(".total");
-          totalTodo.innerHTML = `You have ${datas.data.length} pending tasks`;
+          const total = 0;
 
           listTodo.innerHTML = ""; // Xóa nội dung trước đó
           // Lặp qua từng phần tử của mảng
           let htmls = datas.data.map(function (data) {
             return `
-      <div class="todo">
-        ${data.completed ? `<s>${data.title}</s>` : `<p>${data.title}</p>`}
-        <button onclick="handleDelete(${data.id})">Delete</button>
-      </div>
-      `;
+                <div class="todo">
+                  ${
+                    data.completed
+                      ? `<s>${data.title}</s>`
+                      : `<p>${data.title}</p>`
+                  }
+                  <div class="button-group">
+                    <button class="btn btn-primary" onclick="handleDelete(${
+                      data.id
+                    })">Delete</button>
+                  <button class="btn btn-danger" onclick="handleUpdate(${
+                    data.id
+                  })">Update</button>
+                    </div>
+                </div>
+                `;
+            total++;
           });
           // Chuyển từ mảng sang string
           let html = htmls.join("");
           // Gắn dữ liệu vào DOM
           listTodo.innerHTML = html;
+          // Hiển thị tổng số bản ghi
+          const totalTodo = document.querySelector(".total");
+          totalTodo.innerHTML = `You have ${total} pending tasks`;
         })
         .catch((error) => {
           console.error("Error fetching todos:", error);
@@ -156,11 +186,76 @@
           .then((res) => res.json())
           .then((datas) => {
             if (datas.status == "success") {
-              window.location.reload();
+              window.location.href = "/";
             }
           })
           .catch((error) => {
             console.error("Error fetching todos:", error);
+          });
+      }
+
+      // Handle completed
+      const inputValue = document.getElementById("inputValue");
+
+      function handleAddTodo() {
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: inputValue.value,
+          }),
+        };
+
+        fetch("http://localhost:3000/api/v1/todos/", requestOptions)
+          .then((res) => {
+            console.log(res);
+            window.location.href = "/";
+          })
+          .catch((err) => console.log(err));
+      }
+
+      // Xóa tất cả todo
+      function handleCleanAll() {
+        fetch(`http://localhost:3000/api/v1/todos/`, {
+          method: "DELETE",
+        })
+          .then((res) => res.json())
+          .then((datas) => {
+            if (datas.status == "success") {
+              window.location.href = "/";
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching todos:", error);
+          });
+      }
+
+      // Sửa todo
+      function handleUpdate(id) {
+        fetch(`http://localhost:3000/api/v1/todos/${id}`)
+          .then((res) => res.json())
+          .then((res) => {
+            console.log("data");
+            fetch(`http://localhost:3000/api/v1/todos/${res.data.id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                completed: !res.completed,
+                title: res.title,
+              }),
+            })
+              .then((res) => {
+                if (res.ok) {
+                  window.location.href = "/";
+                } else {
+                  alert(res.message);
+                }
+              })
+              .catch((err) => console.log(err));
           });
       }
     </script>
